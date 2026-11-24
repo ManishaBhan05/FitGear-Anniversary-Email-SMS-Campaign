@@ -1,0 +1,75 @@
+%%[
+
+/* RETRIEVE FIELDS */
+SET @cusID = [CustomerID]
+SET @firstName = [FirstName]
+
+/* NAME CLEANING AND PERSONALIZED SUBJECT LINE WITH FALLBACK */
+IF NOT EMPTY (@firstName) THEN
+   SET @firstNameTrim = Trim(@firstName)
+   SET @finalName = Propercase(@firstNameTrim)
+   SET @subjectLine = Concat(@finalName, ", Happy 1 year! We have a special gift for you 🎁")
+ELSE 
+   SET @finalName = "member"
+   SET @subjectLine = "Happy 1 year! We have a special gift for you 🎁"
+ENDIF
+
+/* RETRIEVE CUSTOMER SPENDING DATA */
+SET @TotalYearlySpend = Lookup("MarketingCustomerView", "TotalYearlySpend", "CustomerID", @cusID)
+SET @AvgBasketSize = Lookup("MarketingCustomerView", "AvgBasketSize", "CustomerID", @cusID)
+
+
+/* DISCOUNT OFFER DETERMINATION   */
+IF @TotalYearlySpend <= 499 THEN
+   
+   IF @AvgBasketSize <= 49 THEN
+     SET @Discount = 10 
+     SET @DiscountRef = "GTUI90"
+   ELSEIF @AvgBasketSize >= 50 AND @AvgBasketSize <= 99 THEN
+    SET @Discount = 15 
+    SET @DiscountRef = "TGI782"
+  ELSE 
+    SET @Discount = 20 
+    SET @DiscountRef = "THP892"
+   ENDIF   
+   
+ELSEIF @TotalYearlySpend >= 500 AND @TotalYearlySpend <= 999 THEN   
+   IF @AvgBasketSize <= 49 THEN
+     SET @Discount = 15 
+     SET @DiscountRef = "POE231"
+   ELSEIF @AvgBasketSize >= 50 AND @AvgBasketSize <= 99 THEN
+    SET @Discount = 20 
+    SET @DiscountRef = "IIO908"
+  ELSE 
+    SET @Discount = 25
+    SET @DiscountRef = "THN567"
+   ENDIF   
+      
+ELSE 
+
+   IF @AvgBasketSize <= 49 THEN
+     SET @Discount = 20 
+     SET @DiscountRef = "UIT897"
+   ELSEIF @AvgBasketSize >= 50 AND @AvgBasketSize <= 99 THEN
+    SET @Discount = 25 
+    SET @DiscountRef = "WEX312"
+  ELSE 
+    SET @Discount = 30 
+    SET @DiscountRef = "TTN187"
+   ENDIF  
+              
+ENDIF
+
+/* DYNAMIC LINK TO REDEEM OFFER */
+SET @link = Concat("fitgear.com/redeem?code=", @DiscountRef)
+
+/* DYNAMIC EMAIL MESSAGE */
+IF @AvgBasketSize <= 49 THEN
+     SET @message = Concat("Thanks for being with us for a year! Enjoy ",  @Discount ,"% off your next purchase as a token of our appreciation. We hope you continue to find everything you need for your sports and fitness journey.") 
+ELSEIF @AvgBasketSize <= 99 THEN
+     SET @message = Concat("It's been a fantastic year with you! To celebrate, we're giving you ",  @Discount ,"% off your next purchase. Thank you for choosing FitGear for your sports needs.") 
+ELSE 
+     SET @message = Concat("A big thank you for being with us for a year! Enjoy ", @Discount , "% off your next purchase. We're thrilled to have you as a loyal customer.") 
+ENDIF   
+
+]%%
